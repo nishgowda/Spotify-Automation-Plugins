@@ -13,5 +13,5 @@ git clone https://github.com/nishgowda/Spotify-Automation-Plugins.git
 - if YouTube, run: ``` python3 create_playlist.py```
 
 ## Limits:
-Unfortunately spotifys web api does not allow you to automate a process where you can create a playlist off of local files. So an extra step is needed where you must select the path to your created folder that holds your downloaded soundcloud playlist.
+Unfortunately Spotify's Web Api does not allow you to automate a process where you can create a playlist off of local files. So an extra step is needed where you must select the path to your created folder that holds your downloaded soundcloud playlist.
 

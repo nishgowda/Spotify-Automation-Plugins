@@ -1,2 +1,3 @@
 *.env
-*Soundfinal
+*.cache-nishman606
+.pyc

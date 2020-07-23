@@ -1,3 +1,10 @@
+"""
+    @file: soundcloud.py
+    @author: Nish Gowda
+    @date: 07/22/20
+    @about: Scrapes soundcloud to grab the links of all the songs in a given playlist
+    and then autonomously visits a website that downloads soundcloud songs
+"""
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -21,14 +28,13 @@ class SoundcloudPlugin():
         self.chrome_driver = os.environ.get("CHROME_DRIVER")
         self.parent_dir = os.environ.get("PARENT_DIR")
 
+    # using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
     def scrape(self):
         driver = webdriver.Chrome(self.chrome_driver)
         driver.get(self.playlist_url)
         html = driver.page_source
         soup = BeautifulSoup(html, 'html.parser')
-        #result = soup.find_a("div", class_="trackList g-all-transitions-300 lazyLoadingList")
         results = soup.find_all("li", class_="trackList__item sc-border-light-bottom")
-        #print(results)
         track_url = []
         for x in results:
             div = x.find_all("div", class_="trackItem g-flex-row sc-type-small sc-type-light")
@@ -39,10 +45,10 @@ class SoundcloudPlugin():
                     link = ("https://soundcloud.com" + href['href'])
                     self.tracks.update({href.text: link})
                     
-        
         driver.close()
         self.download_soundcloud(self.tracks)
 
+    # use selenium to automate the process of clicking through klickaud.com to download the songs
     def download_soundcloud(self, links):
         for track in links.keys():
             driver = webdriver.Chrome(self.chrome_driver)
@@ -58,9 +64,10 @@ class SoundcloudPlugin():
             finally:
                 download_element.click()
                 print('Downloading ' + track + "...")
-
+    
+    # make the directory in the same directory as the projects and move all the downloaded songs there
+    # Note this will work if there aren't any .mp3 files already in downloads folder
     def make_directories(self):
-        # make the directory to store downloaded files
         directory_name = self.directory_name
         parent_dir = self.parent_dir
         path = os.path.join(dirname(__file__), directory_name)
@@ -71,11 +78,9 @@ class SoundcloudPlugin():
                 shutil.move(os.path.join(parent_dir, file), os.path.join(path,file))
         print("Moved files to created directory: " + str(path))
 
-
-
 if __name__ == "__main__":
     soundcloud = SoundcloudPlugin()
     soundcloud.directory_name = sys.argv[1]
-    #soundcloud.scrape()
+    soundcloud.scrape()
     soundcloud.make_directories()
     
