@@ -7,9 +7,9 @@ git clone https://github.com/nishgowda/Spotify-Automation-Plugins.git
 ```
 
 ## How to Run:
-- You must create a .env file that includes your sensitive information for souncloud
+- You must create a .env file that includes your sensitive information for soundcloud
 - You must enable the YouTube api and create an app on spotify and import the credentials into secrets.py
-- if Soundcloud, run: ``` python3 soundcloud.py <Directory for songs> ```
+- if Soundcloud, run: ``` python3 soundcloud.py <spotify username> <playlist name> <playlist description> <Directory for songs> ```
 - if YouTube, run: ``` python3 create_playlist.py```
 
 ## Limits:
