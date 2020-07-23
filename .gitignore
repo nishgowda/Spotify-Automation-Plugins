@@ -1,3 +1,4 @@
 *.env
 *.cache-nishman606
-.pyc
+*.pyc
+*.json
