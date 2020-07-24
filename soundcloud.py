@@ -21,20 +21,20 @@ from os.path import join, dirname
 import json
 
 class SoundcloudPlugin():
-
+    env_path = join(dirname(__file__), 'secrets.env')
+    load_dotenv(env_path)
     def __init__(self):
         self.directory_name = ''
         self.username = ''
         self.playlist_name = ''
         self.playlist_description = ''
         self.tracks = {}
-        env_path = join(dirname(__file__), 'secrets.env')
-        load_dotenv(env_path)
         self.playlist_url = os.environ.get("PLAYLIST_URL")
         self.chrome_driver = os.environ.get("CHROME_DRIVER")
         self.parent_dir = os.environ.get("PARENT_DIR")
 
     # using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
+    # check if song exists in spotify and if it does then add it to the created playlist, else download it.
     def scrape(self):
         token = self.authenticate_spotify()
         driver = webdriver.Chrome(self.chrome_driver)
@@ -43,17 +43,14 @@ class SoundcloudPlugin():
         spotify_uris = []
         soup = BeautifulSoup(html, 'html.parser')
         results = soup.find_all("li", class_="trackList__item sc-border-light-bottom")
-        track_url = []
         for x in results:
             div = x.find_all("div", class_="trackItem g-flex-row sc-type-small sc-type-light")
             for z in div:
                 final_div = z.find_all("div", class_="trackItem__content sc-truncate")
                 for ref in final_div:
-                    href = ref.find("a", class_="trackItem__trackTitle sc-link-dark sc-font-light",href=True)
+                    href = ref.find("a", class_="trackItem__trackTitle sc-link-dark sc-font-light", href=True)
                     track_name = href.text.lower().replace(" ", "+") 
-                    artist_name = ref.find("a", class_="trackItem__username sc-link-light").text.lower().replace(" ", "") 
-                    print(track_name + ' by ' + artist_name)
-                    #track_info.update({track_name, artist_name})
+                    artist_name = ref.find("a", class_="trackItem__username sc-link-light").text.lower().replace(" ", "+") 
                     if self.get_spotify_uri(track_name, artist_name, token) is not None:
                         spotify_uris.append(self.get_spotify_uri(track_name, artist_name, token))
                     else:
@@ -77,7 +74,7 @@ class SoundcloudPlugin():
         token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
         return token
 
-    # make a query for a song based on its song name and artist name
+    # make a query for a song based on its song and artist name
     def get_spotify_uri(self, track_name, artist_name, token):
         query = "https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track".format(track_name,artist_name)
         response = requests.get(query, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
@@ -123,7 +120,7 @@ class SoundcloudPlugin():
     
     # make the directory in the same directory as the projects and move all the downloaded songs there
     # Note this will work if there aren't any .mp3 files already in downloads folder
-    def make_directories(self):
+    def make_directory(self):
         directory_name = self.directory_name
         parent_dir = self.parent_dir
         path = os.path.join(dirname(__file__), directory_name)
@@ -141,5 +138,5 @@ if __name__ == "__main__":
     soundcloud.playlist_description = sys.argv[3]
     soundcloud.directory_name = sys.argv[4]
     soundcloud.scrape()
-    soundcloud.make_directories()
+    soundcloud.make_directory()
     
