@@ -19,6 +19,8 @@ import sys
 from dotenv import load_dotenv
 from os.path import join, dirname
 import json
+import youtube_dl
+
 
 class SoundcloudPlugin():
     env_path = join(dirname(__file__), 'secrets.env')
@@ -35,7 +37,7 @@ class SoundcloudPlugin():
 
     ''' using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
         check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
-   def scrape(self):
+    def scrape(self):
         token = self.authenticate_spotify()
         driver = webdriver.Chrome(self.chrome_driver)
         driver.get(self.playlist_url)
@@ -66,6 +68,7 @@ class SoundcloudPlugin():
         driver.close()
         playlist_id = self.create_playlist(token)
         self.add_songs_to_playlist(spotify_uris, token, playlist_id)
+        self.download_soundcloud(self.tracks)
         self.download_soundcloud(self.tracks)
         
     ''' authenticate users to access their spotify account. Returns a token that we can use to create playlists, search for songs and add songs to playlist '''
@@ -105,29 +108,26 @@ class SoundcloudPlugin():
         response = requests.post(query,data=request_data, headers={"Content-Type": "application/json","Authorization": "Bearer {}".format(token)})
         response_json = response.json()
 
-    ''' use selenium to automate the process of clicking through klickaud.com to download the songs '''
+    ''' use youtube dl to download all the soundcloud songs that werent found on spotify '''
     def download_soundcloud(self, links):
-        # for each track in our links dictionary, visit the site: https://www.klickaud.co/ and automate the downloading song process
+        # preffered formating for audio 
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+            }]}
+        ydl = youtube_dl.YoutubeDL(ydl_opts)
         for track in links.keys():
-            driver = webdriver.Chrome(self.chrome_driver)
-            driver.get("https://www.klickaud.co/")
-            inputElement = driver.find_element_by_name("value")
-            inputElement.clear()
-            inputElement.send_keys(links[track])
-            inputElement.submit()
-            try:
-                download_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.ID, "dlMP3"))
-                )
-            finally:
-                download_element.click()
-                print('Downloading ' + track + "...")
-    
+            print('-------- downloading ' + track + '... ---------')    
+            ydl.download([links[track]])   
+
     ''' make the directory in the same directory as the projects and move all the downloaded songs there
     Note this will work if there aren't any .mp3 files already in downloads folder '''
     def make_directory(self):
         directory_name = self.directory_name
-        parent_dir = self.parent_dir
+        parent_dir = os.path.dirname(os.path.realpath(__file__))
         path = os.path.join(dirname(__file__), directory_name)
         source_files = os.listdir(parent_dir)
         os.mkdir(path)
