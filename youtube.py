@@ -1,9 +1,9 @@
-'''
+"""
     @file:youtube.py
     @author:Nish Gowda
     @date:07/23/2020
     @about: Automate sycning songs from playlists in youtube directly to spotify
-'''
+"""
 import googleapiclient.discovery
 import youtube_dl
 import spotipy.util as util
@@ -19,7 +19,6 @@ class YoutubePlugin():
     env_path = join(dirname(__file__), 'secrets.env')
     load_dotenv(env_path)
     def __init__(self):
-        self.tracks = {}
         self.username = ''
         self.playlist_url = ''
         self.playlist_name = ''
@@ -54,7 +53,6 @@ class YoutubePlugin():
                         youtube_url, download=False)
                     song_name = video["title"]
                     artist = video["uploader"].replace(" - Topic", " ")
-                    self.tracks.update({song_name: artist})
                     print(song_name + " by " + artist)
                     if self.get_spotify_uri(song_name, artist, token) is not None:
                         uris.append(self.get_spotify_uri(song_name, artist, token))
@@ -91,7 +89,7 @@ class YoutubePlugin():
 
     ''' Given a song name and artist name, use spotify web api to search for the uri of the song to later add it to the playlsit'''
     def get_spotify_uri(self, track_name, artist_name, token):
-        query = "https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track".format(track_name,artist_name)
+        query = "https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track&offset=0&limit=20".format(track_name,artist_name)
         response = requests.get(query, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
         response_json = response.json()
         songs = response_json["tracks"]["items"]

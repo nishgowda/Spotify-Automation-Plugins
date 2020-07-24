@@ -29,13 +29,13 @@ class SoundcloudPlugin():
         self.playlist_name = ''
         self.playlist_description = ''
         self.tracks = {}
-        self.playlist_url = os.environ.get("PLAYLIST_URL")
+        self.playlist_url = ''
         self.chrome_driver = os.environ.get("CHROME_DRIVER")
         self.parent_dir = os.environ.get("PARENT_DIR")
 
     # using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
     # check if song exists in spotify and if it does then add it to the created playlist, else download it.
-    def scrape(self):
+   def scrape(self):
         token = self.authenticate_spotify()
         driver = webdriver.Chrome(self.chrome_driver)
         driver.get(self.playlist_url)
@@ -64,8 +64,6 @@ class SoundcloudPlugin():
         
     # authenticate users to access their spotify account
     def authenticate_spotify(self):
-        env_path = join(dirname(__file__), 'secrets.env')
-        load_dotenv(env_path)
         client_id = os.environ.get("CLIENT_ID")
         client_secret = os.environ.get("CLIENT_SECRET")
         redirect_uri = os.environ.get("REDIRECT_URI")
@@ -134,9 +132,10 @@ class SoundcloudPlugin():
 if __name__ == "__main__":
     soundcloud = SoundcloudPlugin()
     soundcloud.username = sys.argv[1]
-    soundcloud.playlist_name = sys.argv[2]
-    soundcloud.playlist_description = sys.argv[3]
-    soundcloud.directory_name = sys.argv[4]
+    soundcloud.playlist_url = sys.argv[2]
+    soundcloud.playlist_name = sys.argv[3]
+    soundcloud.playlist_description = sys.argv[4]
+    soundcloud.directory_name = sys.argv[5]
     soundcloud.scrape()
     soundcloud.make_directory()
     
