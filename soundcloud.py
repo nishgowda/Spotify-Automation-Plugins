@@ -37,7 +37,7 @@ class SoundcloudPlugin():
 
     ''' using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
         check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
-    def scrape(self):
+    def get_songs(self):
         token = self.authenticate_spotify()
         driver = webdriver.Chrome(self.chrome_driver)
         driver.get(self.playlist_url)
@@ -143,6 +143,6 @@ if __name__ == "__main__":
     soundcloud.playlist_name = sys.argv[3]
     soundcloud.playlist_description = sys.argv[4]
     soundcloud.directory_name = sys.argv[5]
-    soundcloud.scrape()
+    soundcloud.get_song()
     soundcloud.make_directory()
     

@@ -4,5 +4,5 @@
 *.json
 .cache-
 .DS_Store
-sounders
+bower_components/sounders
 *.mp3
