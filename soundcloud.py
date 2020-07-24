@@ -33,8 +33,8 @@ class SoundcloudPlugin():
         self.chrome_driver = os.environ.get("CHROME_DRIVER")
         self.parent_dir = os.environ.get("PARENT_DIR")
 
-    # using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
-    # check if song exists in spotify and if it does then add it to the created playlist, else download it.
+    ''' using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
+        check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
    def scrape(self):
         token = self.authenticate_spotify()
         driver = webdriver.Chrome(self.chrome_driver)
@@ -42,7 +42,11 @@ class SoundcloudPlugin():
         html = driver.page_source
         spotify_uris = []
         soup = BeautifulSoup(html, 'html.parser')
+
+        # start our beautiful soup search with the parent element
         results = soup.find_all("li", class_="trackList__item sc-border-light-bottom")
+
+        # traverse through the all the sub elements of our search to find all the song divs in a page then retrieve their links and song data
         for x in results:
             div = x.find_all("div", class_="trackItem g-flex-row sc-type-small sc-type-light")
             for z in div:
@@ -51,6 +55,8 @@ class SoundcloudPlugin():
                     href = ref.find("a", class_="trackItem__trackTitle sc-link-dark sc-font-light", href=True)
                     track_name = href.text.lower().replace(" ", "+") 
                     artist_name = ref.find("a", class_="trackItem__username sc-link-light").text.lower().replace(" ", "+") 
+
+                    # if spotify can find a uri for this song, then we append it to our list, else we send it to our dictionary which will download the song instead
                     if self.get_spotify_uri(track_name, artist_name, token) is not None:
                         spotify_uris.append(self.get_spotify_uri(track_name, artist_name, token))
                     else:
@@ -62,7 +68,7 @@ class SoundcloudPlugin():
         self.add_songs_to_playlist(spotify_uris, token, playlist_id)
         self.download_soundcloud(self.tracks)
         
-    # authenticate users to access their spotify account
+    ''' authenticate users to access their spotify account. Returns a token that we can use to create playlists, search for songs and add songs to playlist '''
     def authenticate_spotify(self):
         client_id = os.environ.get("CLIENT_ID")
         client_secret = os.environ.get("CLIENT_SECRET")
@@ -72,7 +78,7 @@ class SoundcloudPlugin():
         token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
         return token
 
-    # make a query for a song based on its song and artist name
+    ''' make a query for a song based on its song and artist name '''
     def get_spotify_uri(self, track_name, artist_name, token):
         query = "https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track".format(track_name,artist_name)
         response = requests.get(query, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
@@ -84,7 +90,7 @@ class SoundcloudPlugin():
         except:
             return None
 
-    # create the playlist on spotify to store our songs
+    ''' create the playlist on spotify to store our songs '''
     def create_playlist(self, token):
         request_body = json.dumps({"name": self.playlist_name, "description": self.playlist_description, "public": True})
         query = "https://api.spotify.com/v1/users/{}/playlists".format(self.username)
@@ -92,15 +98,16 @@ class SoundcloudPlugin():
         response_json = response.json()
         return response_json["id"]
 
-    # add the found soundcloud songs to created playlist on spotify
+    ''' add the found soundcloud songs to created playlist on spotify '''
     def add_songs_to_playlist(self, uris, token, playlist_id):
         request_data = json.dumps(uris)
         query = "https://api.spotify.com/v1/playlists/{}/tracks".format(playlist_id)
         response = requests.post(query,data=request_data, headers={"Content-Type": "application/json","Authorization": "Bearer {}".format(token)})
         response_json = response.json()
 
-    # use selenium to automate the process of clicking through klickaud.com to download the songs
+    ''' use selenium to automate the process of clicking through klickaud.com to download the songs '''
     def download_soundcloud(self, links):
+        # for each track in our links dictionary, visit the site: https://www.klickaud.co/ and automate the downloading song process
         for track in links.keys():
             driver = webdriver.Chrome(self.chrome_driver)
             driver.get("https://www.klickaud.co/")
@@ -116,8 +123,8 @@ class SoundcloudPlugin():
                 download_element.click()
                 print('Downloading ' + track + "...")
     
-    # make the directory in the same directory as the projects and move all the downloaded songs there
-    # Note this will work if there aren't any .mp3 files already in downloads folder
+    ''' make the directory in the same directory as the projects and move all the downloaded songs there
+    Note this will work if there aren't any .mp3 files already in downloads folder '''
     def make_directory(self):
         directory_name = self.directory_name
         parent_dir = self.parent_dir
