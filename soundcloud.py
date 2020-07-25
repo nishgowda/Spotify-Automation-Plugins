@@ -8,11 +8,7 @@
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import spotipy.util as util
-from spotipy.oauth2 import SpotifyClientCredentials
 import shutil
 import os
 import sys
@@ -33,7 +29,6 @@ class SoundcloudPlugin():
         self.tracks = {}
         self.playlist_url = ''
         self.chrome_driver = os.environ.get("CHROME_DRIVER")
-        self.parent_dir = os.environ.get("PARENT_DIR")
 
     ''' using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
         check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
@@ -120,7 +115,7 @@ class SoundcloudPlugin():
             }]}
         ydl = youtube_dl.YoutubeDL(ydl_opts)
         for track in links.keys():
-            print('-------- downloading ' + track + '... ---------')    
+            print('-------- Downloading ' + track + ' ---------')    
             ydl.download([links[track]])   
 
     ''' make the directory in the same directory as the projects and move all the downloaded songs there
@@ -143,6 +138,6 @@ if __name__ == "__main__":
     soundcloud.playlist_name = sys.argv[3]
     soundcloud.playlist_description = sys.argv[4]
     soundcloud.directory_name = sys.argv[5]
-    soundcloud.get_song()
+    soundcloud.get_songs()
     soundcloud.make_directory()
     
