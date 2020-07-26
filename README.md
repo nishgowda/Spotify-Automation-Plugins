@@ -12,15 +12,15 @@ git clone https://github.com/nishgowda/Spotify-Automation-Plugins.git
 - You must have an apple developer account and get enable the [apple music api](https://developer.apple.com/documentation/applemusicapi) . Get a  secret key, key id , and team id and create an app in spotify.
 - If you want to use Soundcloud, run: 
 ```
-python3 soundcloud.py <spotify username> <soundcloud playlist url> <playlist name> <playlist description> <directory for songs> 
+python3 soundcloud.py <spotify username> <soundcloud playlist url> 
 ```
 - If you want to use YouTube, run: 
 ```
-python3 youtube.py <spotify username> <youtube playlist url> <spotify playlist name> <spotify playlist description>
+python3 youtube.py <spotify username> <youtube playlist url>
 ```
 - If you want to use Apple Music, run: 
 ```
-python3 apple_music.py <spotify username> <apple music playlist url> <spotify playlist name> <spotify playlist description>
+python3 apple_music.py <spotify username> <apple music playlist url>
 ```
 ## Limits:
 Unfortunately Spotify's Web Api does not allow you to automate a process where you can create a playlist off of local files. So an extra step is needed where you must [select the path](https://support.spotify.com/us/using_spotify/features/listen-to-local-files/) to your created folder that holds your downloaded soundcloud playlist.
