@@ -21,18 +21,30 @@ class YoutubePlugin():
     def __init__(self):
         self.username = ''
         self.playlist_url = ''
-        self.playlist_name = ''
-        self.playlist_description = ''
-    
+
     ''' Given a url, parse just the playlist id to use in your get_playlist function '''
     def search_for_playlist(self):
         playlist_id = self.playlist_url.replace("https://www.youtube.com/playlist?list=", "")
         return playlist_id
+        
+    ''' Grab the name and description of the youtube playlist given'''
+    def get_playlist_info(self):
+        # build the youtube client to find info about the playlist given
+        youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = os.environ.get("DEVELOPER_KEY"))
+        request = youtube.playlists().list(
+        part = "snippet",
+        id = self.search_for_playlist(),
+        maxResults = 50
+        )
+        response = request.execute()
+        playlist_name = response["items"][0]["snippet"]["localized"]["title"]
+        playlist_description = response["items"][0]["snippet"]["localized"]["description"]
+        return [playlist_name, playlist_description]
 
     ''' Get the songs in a given youtube playlist using youtube api and use below functions to create a playlist and add each found song to it '''
     def get_playlist(self):
-        # build our youtube client to find our playlist 
-        youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = os.environ.get("DEVELOPER_KEY"))
+        # build our youtube client to list out the content in the given playlist
+        youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = os.environ.get("DEVELOPER_KEY")) 
         request = youtube.playlistItems().list(
         part = "snippet",
         playlistId = self.search_for_playlist(),
@@ -41,7 +53,6 @@ class YoutubePlugin():
         response = request.execute()
         token = self.authenticate_spotify()
         uris = []
-        
         while request is not None:
             response = request.execute()
             for item in response["items"]:
@@ -49,7 +60,6 @@ class YoutubePlugin():
                     video_id = item["snippet"]["resourceId"]["videoId"]
                     youtube_url = "https://www.youtube.com/watch?v={}".format(
                     video_id)
-
                     # use youtube_dl to collect the song title and channel title (song name and artist)
                     video = youtube_dl.YoutubeDL({}).extract_info(
                         youtube_url, download=False)
@@ -64,8 +74,9 @@ class YoutubePlugin():
                     print("Video is unavailable")
                 # allows us to iterate through all the items in the request 
                 request = youtube.playlistItems().list_next(request, response)
-        
-        spotify_playlist_id = self.create_playlist(token)
+        playlist_name = self.get_playlist_info()[0]
+        playlist_description = self.get_playlist_info()[1]
+        spotify_playlist_id = self.create_playlist(token, playlist_name, playlist_description)
         self.add_songs_to_playlist(token, uris, spotify_playlist_id)
     
     ''' Follow spotify oauth to authenticate the user. Returns a token that we can use in your create_playlist, get_spotify_uri, and add_songs_to_playlist functions '''
@@ -79,8 +90,8 @@ class YoutubePlugin():
         return token
 
     ''' Create playlist on spotify for users '''
-    def create_playlist(self, token):
-        request_body = json.dumps({"name": self.playlist_name, "description": self.playlist_description, "public": True})
+    def create_playlist(self, token, playlist_name, playlist_description):
+        request_body = json.dumps({"name": playlist_name, "description": playlist_description, "public": True})
         query = "https://api.spotify.com/v1/users/{}/playlists".format(self.username)
         response = requests.post(query, data=request_body, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
         response_json = response.json()
@@ -109,6 +120,4 @@ if __name__=="__main__":
     youtube = YoutubePlugin()
     youtube.username = sys.argv[1]
     youtube.playlist_url = sys.argv[2]
-    youtube.playlist_name = sys.argv[3]
-    youtube.playlist_description = sys.argv[4]
     youtube.get_playlist()

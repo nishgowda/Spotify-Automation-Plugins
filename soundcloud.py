@@ -22,14 +22,25 @@ class SoundcloudPlugin():
     env_path = join(dirname(__file__), 'secrets.env')
     load_dotenv(env_path)
     def __init__(self):
-        self.directory_name = ''
         self.username = ''
-        self.playlist_name = ''
-        self.playlist_description = ''
         self.tracks = {}
         self.playlist_url = ''
         self.chrome_driver = os.environ.get("CHROME_DRIVER")
-
+    
+    ''' Grab the playlist name and description from the webpage of the playlist '''
+    def get_soundcloud_playlist_info(self, soup):
+        playlist_info = []      
+        name_result = soup.find_all("span", class_="soundTitle__title sc-font g-type-shrinkwrap-inline g-type-shrinkwrap-large-primary")
+        for x in name_result:
+            span = x.find("span").text
+            playlist_info.append(span)
+        description_result = soup.find_all("div", class_="truncatedAudioInfo__content")
+        for i in description_result:
+            sub_div = i.find_all("div", class_="sc-type-small")
+            for j in sub_div:
+                p = i.find("div").text
+                playlist_info.append(p)
+        return playlist_info
     ''' using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
         check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
     def get_songs(self):
@@ -40,6 +51,9 @@ class SoundcloudPlugin():
         spotify_uris = []
         soup = BeautifulSoup(html, 'html.parser')
 
+        playlist_name = self.get_soundcloud_playlist_info(soup)[0]
+        playlist_description = self.get_soundcloud_playlist_info(soup)[1]
+        
         # start our beautiful soup search with the parent element
         results = soup.find_all("li", class_="trackList__item sc-border-light-bottom")
 
@@ -61,7 +75,8 @@ class SoundcloudPlugin():
                         self.tracks.update({href.text: link})
         
         driver.close()
-        playlist_id = self.create_playlist(token)
+
+        playlist_id = self.create_playlist(token, playlist_name, playlist_description)
         self.add_songs_to_playlist(spotify_uris, token, playlist_id)
         self.download_soundcloud(self.tracks)
         self.download_soundcloud(self.tracks)
@@ -89,8 +104,8 @@ class SoundcloudPlugin():
             return None
 
     ''' create the playlist on spotify to store our songs '''
-    def create_playlist(self, token):
-        request_body = json.dumps({"name": self.playlist_name, "description": self.playlist_description, "public": True})
+    def create_playlist(self, token, playlist_name, playlist_description):
+        request_body = json.dumps({"name": playlist_name, "description": playlist_description, "public": True})
         query = "https://api.spotify.com/v1/users/{}/playlists".format(self.username)
         response = requests.post(query, data=request_body, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
         response_json = response.json()
@@ -121,7 +136,7 @@ class SoundcloudPlugin():
     ''' make the directory in the same directory as the projects and move all the downloaded songs there
     Note this will work if there aren't any .mp3 files already in downloads folder '''
     def make_directory(self):
-        directory_name = self.directory_name
+        directory_name = "Soundcloud"
         parent_dir = os.path.dirname(os.path.realpath(__file__))
         path = os.path.join(dirname(__file__), directory_name)
         source_files = os.listdir(parent_dir)
@@ -135,9 +150,6 @@ if __name__ == "__main__":
     soundcloud = SoundcloudPlugin()
     soundcloud.username = sys.argv[1]
     soundcloud.playlist_url = sys.argv[2]
-    soundcloud.playlist_name = sys.argv[3]
-    soundcloud.playlist_description = sys.argv[4]
-    soundcloud.directory_name = sys.argv[5]
     soundcloud.get_songs()
     soundcloud.make_directory()
     
