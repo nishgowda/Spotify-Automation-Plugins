@@ -1,3 +1,9 @@
+"""
+    @file:apple_music.py
+    @author:Nish Gowda
+    @date:07/26/2020
+    @about: Automate sycning songs from playlists in apple music directly to spotify
+"""
 import spotipy.util as util
 import requests
 import json
@@ -8,6 +14,7 @@ from os.path import join, dirname
 from pathlib import Path
 import jwt
 import datetime
+
 class AppleMusicPlugin():
     env_path = join(dirname(__file__), 'secrets.env')
     load_dotenv(env_path)
@@ -62,7 +69,7 @@ class AppleMusicPlugin():
     
         paylist_id = self.create_playlist(spotify_token, playlist_name, playlist_description)
         self.add_songs_to_playlist(uris, spotify_token, playlist_id)
-        print("Succesfully added all songs from apple music to spotify")
+        print("Succesfully added all songs from Apple Music to Spotify!")
 
     ''' Using spotify authentication method to authenticate a user by their username '''
     def authenticate_spotify(self):

@@ -78,6 +78,7 @@ class YoutubePlugin():
         playlist_description = self.get_playlist_info()[1]
         spotify_playlist_id = self.create_playlist(token, playlist_name, playlist_description)
         self.add_songs_to_playlist(token, uris, spotify_playlist_id)
+        print("Succesfully added all songs from YouTube to Spotify!")
     
     ''' Follow spotify oauth to authenticate the user. Returns a token that we can use in your create_playlist, get_spotify_uri, and add_songs_to_playlist functions '''
     def authenticate_spotify(self):

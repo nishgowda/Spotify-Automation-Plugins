@@ -17,7 +17,6 @@ from os.path import join, dirname
 import json
 import youtube_dl
 
-
 class SoundcloudPlugin():
     env_path = join(dirname(__file__), 'secrets.env')
     load_dotenv(env_path)
@@ -41,6 +40,7 @@ class SoundcloudPlugin():
                 p = i.find("div").text
                 playlist_info.append(p)
         return playlist_info
+
     ''' using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
         check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
     def get_songs(self):
@@ -80,6 +80,7 @@ class SoundcloudPlugin():
         self.add_songs_to_playlist(spotify_uris, token, playlist_id)
         self.download_soundcloud(self.tracks)
         self.download_soundcloud(self.tracks)
+        print("Succesfully added all songs from Soundcloud to Spotify!")
         
     ''' authenticate users to access their spotify account. Returns a token that we can use to create playlists, search for songs and add songs to playlist '''
     def authenticate_spotify(self):
