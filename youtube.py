@@ -27,7 +27,6 @@ class YoutubePlugin():
     ''' Given a url, parse just the playlist id to use in your get_playlist function '''
     def search_for_playlist(self):
         playlist_id = self.playlist_url.replace("https://www.youtube.com/playlist?list=", "")
-        print(playlist_id)
         return playlist_id
 
     ''' Get the songs in a given youtube playlist using youtube api and use below functions to create a playlist and add each found song to it '''
