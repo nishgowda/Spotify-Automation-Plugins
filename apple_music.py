@@ -50,7 +50,7 @@ class AppleMusicPlugin():
         return token.decode()
 
     ''' Grab the song and artist name of the songs in an apple music playlist and add available songs to new spotify playlist '''
-    def get_songs(self):
+    def copy_playlist(self):
         apple_token = self.get_apple_key()
         playlist_id = self.get_apple_music_id()
         query = 'https://api.music.apple.com/v1/catalog/{}/playlists/{}'.format('us', playlist_id)
@@ -69,7 +69,7 @@ class AppleMusicPlugin():
     
         paylist_id = self.create_playlist(spotify_token, playlist_name, playlist_description)
         self.add_songs_to_playlist(uris, spotify_token, playlist_id)
-        print("Succesfully added all songs from Apple Music to Spotify!")
+        print("Succesfully copied your playlist on Apple Music to Spotify!")
 
     ''' Using spotify authentication method to authenticate a user by their username '''
     def authenticate_spotify(self):
@@ -92,6 +92,7 @@ class AppleMusicPlugin():
             return uri
         except:
             return None
+
     ''' Create a playlist to hold our songs '''
     def create_playlist(self, token, playlist_name, playlist_description):
         request_body = json.dumps({"name": playlist_name, "description": playlist_description, "public": True})
@@ -111,4 +112,4 @@ if __name__ == "__main__":
     apple_music = AppleMusicPlugin()
     apple_music.username = sys.argv[1]
     apple_music.apple_playlist_url = sys.argv[2]
-    apple_music.get_songs()
+    apple_music.copy_playlist()

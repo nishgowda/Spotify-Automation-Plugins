@@ -7,7 +7,6 @@
 import googleapiclient.discovery
 import youtube_dl
 import spotipy.util as util
-from spotipy.oauth2 import SpotifyClientCredentials
 import requests
 import os
 import sys
@@ -42,7 +41,7 @@ class YoutubePlugin():
         return [playlist_name, playlist_description]
 
     ''' Get the songs in a given youtube playlist using youtube api and use below functions to create a playlist and add each found song to it '''
-    def get_playlist(self):
+    def copy_playlist(self):
         # build our youtube client to list out the content in the given playlist
         youtube = googleapiclient.discovery.build("youtube", "v3", developerKey = os.environ.get("DEVELOPER_KEY")) 
         request = youtube.playlistItems().list(
@@ -78,7 +77,7 @@ class YoutubePlugin():
         playlist_description = self.get_playlist_info()[1]
         spotify_playlist_id = self.create_playlist(token, playlist_name, playlist_description)
         self.add_songs_to_playlist(token, uris, spotify_playlist_id)
-        print("Succesfully added all songs from YouTube to Spotify!")
+        print("Succesfully copied from yout playlist on YouTube to Spotify!")
     
     ''' Follow spotify oauth to authenticate the user. Returns a token that we can use in your create_playlist, get_spotify_uri, and add_songs_to_playlist functions '''
     def authenticate_spotify(self):
@@ -121,4 +120,4 @@ if __name__=="__main__":
     youtube = YoutubePlugin()
     youtube.username = sys.argv[1]
     youtube.playlist_url = sys.argv[2]
-    youtube.get_playlist()
+    youtube.copy_playlist()

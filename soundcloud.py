@@ -43,7 +43,7 @@ class SoundcloudPlugin():
 
     ''' Using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
         check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
-    def get_songs(self):
+    def copy_playlist(self):
         token = self.authenticate_spotify()
         driver = webdriver.Chrome(self.chrome_driver)
         driver.get(self.playlist_url)
@@ -80,7 +80,7 @@ class SoundcloudPlugin():
         self.add_songs_to_playlist(spotify_uris, token, playlist_id)
         self.download_soundcloud(self.tracks)
         self.download_soundcloud(self.tracks)
-        print("Succesfully added all songs from Soundcloud to Spotify!")
+        print("Succesfully copied your playlist on Soundcloud to Spotify!")
         
     ''' Authenticate users to access their spotify account. Returns a token that we can use to create playlists, search for songs and add songs to playlist '''
     def authenticate_spotify(self):
@@ -150,6 +150,6 @@ if __name__ == "__main__":
     soundcloud = SoundcloudPlugin()
     soundcloud.username = sys.argv[1]
     soundcloud.playlist_url = sys.argv[2]
-    soundcloud.get_songs()
+    soundcloud.copy_playlist()
     soundcloud.make_directory()
     

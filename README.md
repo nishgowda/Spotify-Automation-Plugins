@@ -25,3 +25,4 @@ python3 apple_music.py <spotify username> <apple music playlist url>
 ## Limits:
 Unfortunately Spotify's Web Api does not allow you to automate a process where you can create a playlist off of local files. So an extra step is needed where you must [select the path](https://support.spotify.com/us/using_spotify/features/listen-to-local-files/) to your created folder that holds your downloaded soundcloud playlist.
 
+*A project by Nish Gowda*
