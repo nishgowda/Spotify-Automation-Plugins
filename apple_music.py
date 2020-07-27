@@ -52,24 +52,23 @@ class AppleMusicPlugin():
     ''' Grab the song and artist name of the songs in an apple music playlist and add available songs to new spotify playlist '''
     def copy_playlist(self):
         apple_token = self.get_apple_key()
-        playlist_id = self.get_apple_music_id()
-        query = 'https://api.music.apple.com/v1/catalog/{}/playlists/{}'.format('us', playlist_id)
+        apple_playlist_id = self.get_apple_music_id()
+        query = 'https://api.music.apple.com/v1/catalog/{}/playlists/{}'.format('us', apple_playlist_id)
         response = requests.get(query, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(apple_token)})
         playlist = response.json()
         spotify_token = self.authenticate_spotify()
         uris = []
-        playlist_description = playlist['data'][0]['attributes']['description']['standard']
+        playlist_description = playlist['data'][0]['attributes']['description']['short']
         playlist_name = playlist['data'][0]['attributes']['name']
-        for songs in playlist['data'][0]['relationships']['tracks']['data']:
+        for i, songs in enumerate(playlist['data'][0]['relationships']['tracks']['data']):
             song_name = songs['attributes']['name']
             artist_name = songs['attributes']['artistName']
-            print(song_name + " by " + artist_name)
             if self.get_spotify_uri(song_name, artist_name, spotify_token) is not None:
                 uris.append(self.get_spotify_uri(song_name, artist_name, spotify_token))
-    
-        paylist_id = self.create_playlist(spotify_token, playlist_name, playlist_description)
-        self.add_songs_to_playlist(uris, spotify_token, playlist_id)
-        print("Succesfully copied your playlist on Apple Music to Spotify!")
+                print(str(i) + ".) " + song_name + " by " + artist_name)
+        spotify_paylist_id = self.create_playlist(spotify_token, playlist_name, playlist_description)
+        self.add_songs_to_playlist(uris, spotify_token, spotify_paylist_id)
+        print("-------- Succesfully copied your playlist on Apple Music to Spotify! --------")
 
     ''' Using spotify authentication method to authenticate a user by their username '''
     def authenticate_spotify(self):
@@ -78,13 +77,13 @@ class AppleMusicPlugin():
         redirect_uri = os.environ.get("REDIRECT_URI")
         username = self.username
         scope = "user-library-read user-top-read playlist-modify-public user-follow-read"
-        token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
-        return token
+        spotify_token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
+        return spotify_token
 
     ''' Given an song and artist name, we check if song exists in spotify, if it does then return it's uri'''
-    def get_spotify_uri(self, track_name, artist_name, token):
+    def get_spotify_uri(self, track_name, artist_name, spotify_token):
         query = "https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track".format(track_name,artist_name)
-        response = requests.get(query, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
+        response = requests.get(query, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(spotify_token)})
         response_json = response.json()
         songs = response_json["tracks"]["items"]
         try:
@@ -94,19 +93,20 @@ class AppleMusicPlugin():
             return None
 
     ''' Create a playlist to hold our songs '''
-    def create_playlist(self, token, playlist_name, playlist_description):
+    def create_playlist(self, spotify_token, playlist_name, playlist_description):
         request_body = json.dumps({"name": playlist_name, "description": playlist_description, "public": True})
         query = "https://api.spotify.com/v1/users/{}/playlists".format(self.username)
-        response = requests.post(query, data=request_body, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
+        response = requests.post(query, data=request_body, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(spotify_token)})
         response_json = response.json()
         return response_json["id"]
 
     ''' Add found songs to our newly made playlist '''
-    def add_songs_to_playlist(self, uris, token, playlist_id):
+    def add_songs_to_playlist(self, uris, spotify_token, spotify_playlist_id):
         request_data = json.dumps(uris)
-        query = "https://api.spotify.com/v1/playlists/{}/tracks".format(playlist_id)
-        response = requests.post(query,data=request_data, headers={"Content-Type": "application/json","Authorization": "Bearer {}".format(token)})
+        query = "https://api.spotify.com/v1/playlists/{}/tracks".format(spotify_playlist_id)
+        response = requests.post(query,data=request_data, headers={"Content-Type": "application/json","Authorization": "Bearer {}".format(spotify_token)})
         response_json = response.json()
+
 
 if __name__ == "__main__":
     apple_music = AppleMusicPlugin()

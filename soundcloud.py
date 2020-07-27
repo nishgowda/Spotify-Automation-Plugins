@@ -115,7 +115,7 @@ class SoundcloudPlugin():
     ''' Add the found soundcloud songs to created playlist on spotify '''
     def add_songs_to_playlist(self, uris, token, playlist_id):
         request_data = json.dumps(uris)
-        query = "https://api.spotify.com/v1/playlists/{}/tracks".format(playlist_id)
+        query = "https://api.spotify.com/v1/playlists/{}/tracks".format(spotify_playlist_id)
         response = requests.post(query,data=request_data, headers={"Content-Type": "application/json","Authorization": "Bearer {}".format(token)})
         response_json = response.json()
 
