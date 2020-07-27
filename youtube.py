@@ -71,14 +71,14 @@ class YoutubePlugin():
                     if spotify.get_spotify_uri(song_name, artist, token) is not None:
                         uris.append(spotify.get_spotify_uri(song_name, artist, token))
                 except:
-                    print("Video is unavailable")
+                    print("------- Video is unavailable -------")
                 # allows us to iterate through all the items in the request 
                 request = youtube.playlistItems().list_next(request, response)
         playlist_name = self.get_playlist_info()[0]
         playlist_description = self.get_playlist_info()[1]
         spotify_playlist_id = spotify.create_playlist(token, playlist_name, playlist_description)
         spotify.add_songs_to_playlist(token, uris, spotify_playlist_id)
-        print("Succesfully copied from yout playlist on YouTube to Spotify!")
+        print("-------- Succesfully copied from your playlist on YouTube to Spotify! -------")
 
 
 if __name__=="__main__":

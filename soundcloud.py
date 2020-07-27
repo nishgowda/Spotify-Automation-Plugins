@@ -80,7 +80,7 @@ class SoundcloudPlugin():
         playlist_id = spotify.create_playlist(token, playlist_name, playlist_description)
         spotify.add_songs_to_playlist(spotify_uris, token, playlist_id)
         self.download_soundcloud(self.tracks)
-        print("Succesfully copied your playlist on Soundcloud to Spotify!")
+        print("-------- Succesfully copied your playlist on Soundcloud to Spotify! --------")
 
     ''' Use youtube dl to download all the soundcloud songs that werent found on spotify '''
     def download_soundcloud(self, links):

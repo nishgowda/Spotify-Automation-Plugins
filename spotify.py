@@ -1,15 +1,16 @@
-import spotipy.util as util
-from dotenv import load_dotenv
-from os.path import join, dirname
-import os
-import requests
-import json
 """
     @file:spotify.py
     @author:Nish Gowda
     @date:07/27/2020
     @about: set of tools to add found songs from others to users spotify account
 """
+import spotipy.util as util
+from dotenv import load_dotenv
+from os.path import join, dirname
+import os
+import requests
+import json
+
 class Spotify():
     env_path = join(dirname(__file__), 'secrets.env')
     load_dotenv(env_path)
