@@ -3,7 +3,7 @@
     @author: Nish Gowda
     @date: 07/22/20
     @about: Scrapes soundcloud to grab the links of all the songs in a given playlist
-    and then autonomously visits a website that downloads soundcloud songs
+    and then use youtubedl to downloads soundcloud songs that aren't available in spotify
 """
 import requests
 from bs4 import BeautifulSoup
@@ -41,7 +41,7 @@ class SoundcloudPlugin():
                 playlist_info.append(p)
         return playlist_info
 
-    ''' using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
+    ''' Using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
         check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
     def get_songs(self):
         token = self.authenticate_spotify()
@@ -82,7 +82,7 @@ class SoundcloudPlugin():
         self.download_soundcloud(self.tracks)
         print("Succesfully added all songs from Soundcloud to Spotify!")
         
-    ''' authenticate users to access their spotify account. Returns a token that we can use to create playlists, search for songs and add songs to playlist '''
+    ''' Authenticate users to access their spotify account. Returns a token that we can use to create playlists, search for songs and add songs to playlist '''
     def authenticate_spotify(self):
         client_id = os.environ.get("CLIENT_ID")
         client_secret = os.environ.get("CLIENT_SECRET")
@@ -92,7 +92,7 @@ class SoundcloudPlugin():
         token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
         return token
 
-    ''' make a query for a song based on its song and artist name '''
+    ''' Make a query for a song based on its song and artist name and if possible, return the found spotify uri '''
     def get_spotify_uri(self, track_name, artist_name, token):
         query = "https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track".format(track_name,artist_name)
         response = requests.get(query, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
@@ -104,7 +104,7 @@ class SoundcloudPlugin():
         except:
             return None
 
-    ''' create the playlist on spotify to store our songs '''
+    ''' Create the playlist on spotify to store our songs '''
     def create_playlist(self, token, playlist_name, playlist_description):
         request_body = json.dumps({"name": playlist_name, "description": playlist_description, "public": True})
         query = "https://api.spotify.com/v1/users/{}/playlists".format(self.username)
@@ -112,14 +112,14 @@ class SoundcloudPlugin():
         response_json = response.json()
         return response_json["id"]
 
-    ''' add the found soundcloud songs to created playlist on spotify '''
+    ''' Add the found soundcloud songs to created playlist on spotify '''
     def add_songs_to_playlist(self, uris, token, playlist_id):
         request_data = json.dumps(uris)
         query = "https://api.spotify.com/v1/playlists/{}/tracks".format(playlist_id)
         response = requests.post(query,data=request_data, headers={"Content-Type": "application/json","Authorization": "Bearer {}".format(token)})
         response_json = response.json()
 
-    ''' use youtube dl to download all the soundcloud songs that werent found on spotify '''
+    ''' Use youtube dl to download all the soundcloud songs that werent found on spotify '''
     def download_soundcloud(self, links):
         # preffered formating for audio 
         ydl_opts = {
@@ -134,8 +134,7 @@ class SoundcloudPlugin():
             print('-------- Downloading ' + track + ' ---------')    
             ydl.download([links[track]])   
 
-    ''' make the directory in the same directory as the projects and move all the downloaded songs there
-    Note this will work if there aren't any .mp3 files already in downloads folder '''
+    ''' Make the directory in the same directory as the project's and move all the downloaded songs there '''
     def make_directory(self):
         directory_name = "Soundcloud"
         parent_dir = os.path.dirname(os.path.realpath(__file__))
