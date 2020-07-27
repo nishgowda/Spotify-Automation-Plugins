@@ -8,7 +8,6 @@
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-import spotipy.util as util
 import shutil
 import os
 import sys
@@ -16,16 +15,18 @@ from dotenv import load_dotenv
 from os.path import join, dirname
 import json
 import youtube_dl
+from spotify import Spotify
 
 class SoundcloudPlugin():
     env_path = join(dirname(__file__), 'secrets.env')
     load_dotenv(env_path)
+
     def __init__(self):
         self.username = ''
         self.tracks = {}
         self.playlist_url = ''
         self.chrome_driver = os.environ.get("CHROME_DRIVER")
-    
+        
     ''' Grab the playlist name and description from the webpage of the playlist '''
     def get_soundcloud_playlist_info(self, soup):
         playlist_info = []      
@@ -44,16 +45,16 @@ class SoundcloudPlugin():
     ''' Using beautiful soup and selenium to find all the items in a playlist in soundcloud and add the song name and their links
         check if song exists in spotify and if it does then add it to the created playlist, else download it. '''
     def copy_playlist(self):
-        token = self.authenticate_spotify()
+        spotify = Spotify(self.username)
+        token = spotify.authenticate_spotify()
         driver = webdriver.Chrome(self.chrome_driver)
         driver.get(self.playlist_url)
         html = driver.page_source
         spotify_uris = []
         soup = BeautifulSoup(html, 'html.parser')
-
+        
         playlist_name = self.get_soundcloud_playlist_info(soup)[0]
         playlist_description = self.get_soundcloud_playlist_info(soup)[1]
-        
         # start our beautiful soup search with the parent element
         results = soup.find_all("li", class_="trackList__item sc-border-light-bottom")
 
@@ -68,56 +69,18 @@ class SoundcloudPlugin():
                     artist_name = ref.find("a", class_="trackItem__username sc-link-light").text.lower().replace(" ", "+") 
 
                     # if spotify can find a uri for this song, then we append it to our list, else we send it to our dictionary which will download the song instead
-                    if self.get_spotify_uri(track_name, artist_name, token) is not None:
-                        spotify_uris.append(self.get_spotify_uri(track_name, artist_name, token))
+                    if spotify.get_spotify_uri(track_name, artist_name, token) is not None:
+                        spotify_uris.append(spotify.get_spotify_uri(track_name, artist_name, token))
                     else:
                         link = "https://soundcloud.com" + href["href"]
                         self.tracks.update({href.text: link})
         
         driver.close()
 
-        playlist_id = self.create_playlist(token, playlist_name, playlist_description)
-        self.add_songs_to_playlist(spotify_uris, token, playlist_id)
-        self.download_soundcloud(self.tracks)
+        playlist_id = spotify.create_playlist(token, playlist_name, playlist_description)
+        spotify.add_songs_to_playlist(spotify_uris, token, playlist_id)
         self.download_soundcloud(self.tracks)
         print("Succesfully copied your playlist on Soundcloud to Spotify!")
-        
-    ''' Authenticate users to access their spotify account. Returns a token that we can use to create playlists, search for songs and add songs to playlist '''
-    def authenticate_spotify(self):
-        client_id = os.environ.get("CLIENT_ID")
-        client_secret = os.environ.get("CLIENT_SECRET")
-        redirect_uri = os.environ.get("REDIRECT_URI")
-        username = self.username
-        scope = "user-library-read user-top-read playlist-modify-public user-follow-read"
-        token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
-        return token
-
-    ''' Make a query for a song based on its song and artist name and if possible, return the found spotify uri '''
-    def get_spotify_uri(self, track_name, artist_name, token):
-        query = "https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track".format(track_name,artist_name)
-        response = requests.get(query, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
-        response_json = response.json()
-        songs = response_json["tracks"]["items"]
-        try:
-            uri = songs[0]["uri"]
-            return uri
-        except:
-            return None
-
-    ''' Create the playlist on spotify to store our songs '''
-    def create_playlist(self, token, playlist_name, playlist_description):
-        request_body = json.dumps({"name": playlist_name, "description": playlist_description, "public": True})
-        query = "https://api.spotify.com/v1/users/{}/playlists".format(self.username)
-        response = requests.post(query, data=request_body, headers={"Content-Type":"application/json", "Authorization":"Bearer {}".format(token)})
-        response_json = response.json()
-        return response_json["id"]
-
-    ''' Add the found soundcloud songs to created playlist on spotify '''
-    def add_songs_to_playlist(self, uris, token, playlist_id):
-        request_data = json.dumps(uris)
-        query = "https://api.spotify.com/v1/playlists/{}/tracks".format(spotify_playlist_id)
-        response = requests.post(query,data=request_data, headers={"Content-Type": "application/json","Authorization": "Bearer {}".format(token)})
-        response_json = response.json()
 
     ''' Use youtube dl to download all the soundcloud songs that werent found on spotify '''
     def download_soundcloud(self, links):
