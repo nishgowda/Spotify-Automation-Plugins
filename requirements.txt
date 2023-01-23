@@ -2,7 +2,7 @@ google-auth-oauthlib==0.4.1
 google-api-python-client==1.7.11
 youtube_dl==2020.1.24
 requests==2.22.0
-spotipy==2.13.0
+spotipy==2.22.1
 BeautifulSoup==4.9.1
 selenium==3.141.0
 python-dotenv==0.14.0
